@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feed Kasane Teto!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a0a2e;
+  --accent: #c0392b;
+  --purple: #7c3aed;
+  --light-purple: #a78bfa;
+  --cream: #fff8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--cream);
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle var(--dur) ease-in-out infinite alternate;
+  opacity: 0.3;
+}
+
+@keyframes twinkle {
+  to { opacity: 1; transform: scale(1.5); }
+}
+
+.wrapper {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+  padding: 20px;
+}
+
+h1 {
+  font-family: 'Fredoka One', cursive;
+  font-size: 2rem;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #ff6b6b, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.stat-box {
+  background: rgba(124, 58, 237, 0.2);
+  border: 1px solid var(--light-purple);
+  border-radius: 12px;
+  padding: 8px 16px;
+  min-width: 80px;
+}
+
+.stat-box .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--light-purple);
+}
+
+.stat-box .value {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.3rem;
+}
+
+.hunger-bar-wrap {
+  background: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  height: 28px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(167, 139, 250, 0.3);
+  position: relative;
+}
+
+.hunger-bar {
+  height: 100%;
+  width: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #ff6b6b, var(--accent));
+  transition: width 0.3s ease, background 0.5s;
+}
+
+.hunger-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.8rem;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.teto-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  margin: 8px 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.teto-svg {
+  width: 190px;
+  height: 215px;
+  filter: drop-shadow(0 4px 16px rgba(124, 58, 237, 0.3));
+  transition: filter 0.3s;
+}
+
+.teto-container:hover .teto-svg {
+  filter: drop-shadow(0 4px 24px rgba(124, 58, 237, 0.6));
+}
+
+.speech-bubble {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cream);
+  color: #333;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 16px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+
+.speech-bubble.show { opacity: 1; }
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--cream);
+}
+
+.food-tray {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.food-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  border: 2px solid rgba(167, 139, 250, 0.3);
+  background: rgba(124, 58, 237, 0.15);
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.food-btn:hover {
+  background: rgba(124, 58, 237, 0.3);
+  transform: translateY(-2px);
+}
+
+.food-btn.selected {
+  border-color: var(--accent);
+  background: rgba(192, 57, 43, 0.25);
+  box-shadow: 0 0 12px rgba(192, 57, 43, 0.3);
+}
+
+.food-btn .food-val {
+  font-size: 0.55rem;
+  color: var(--light-purple);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.feed-btn {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.3rem;
+  padding: 12px 48px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--accent), #e74c3c);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(192, 57, 43, 0.4);
+  margin-top: 6px;
+}
+
+.feed-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(192, 57, 43, 0.5);
+}
+
+.feed-btn:active {
+  transform: translateY(0);
+}
+
+@keyframes munch {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.08) rotate(-3deg); }
+  50% { transform: scale(0.95) rotate(2deg); }
+  75% { transform: scale(1.05) rotate(-1deg); }
+}
+
+@keyframes bop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12) rotate(5deg); }
+}
+
+.teto-svg.munch { animation: munch 0.5s ease; }
+.teto-svg.bop { animation: bop 0.35s ease; }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.overlay.show { display: flex; }
+
+.overlay-box {
+  background: linear-gradient(135deg, #2d1b4e, #1a0a2e);
+  border: 2px solid var(--light-purple);
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  max-width: 360px;
+}
+
+.overlay-box h2 {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+  color: #ff6b6b;
+}
+
+.overlay-box p {
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.overlay-box .final-score {
+  font-family: 'Fredoka One', cursive;
+  font-size: 2.5rem;
+  color: var(--light-purple);
+  margin: 12px 0;
+}
+
+.overlay-box .high-score-msg {
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.restart-btn {
+  font-family: 'Fredoka One', cursive;
+  font-size: 1.1rem;
+  padding: 10px 36px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--purple), var(--light-purple));
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 12px;
+}
+
+.restart-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.5);
+}
+
+.particle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 1.6rem;
+  z-index: 50;
+  animation: floatUp 1.2s ease-out forwards;
+}
+
+.heart-particle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 1.4rem;
+  z-index: 50;
+  animation: floatUp 1s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) scale(0.5); }
+}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="wrapper">
+  <h1>🥖 Feed Kasane Teto!</h1>
+
+  <div class="stats">
+    <div class="stat-box">
+      <div class="label">Score</div>
+      <div class="value" id="scoreDisplay">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">Fed</div>
+      <div class="value" id="mealsDisplay">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">Mood</div>
+      <div class="value" id="moodDisplay">😊</div>
+    </div>
+  </div>
+
+  <div class="hunger-bar-wrap">
+    <div class="hunger-bar" id="hungerBar"></div>
+    <div class="hunger-label" id="hungerLabel">Hunger: 100%</div>
+  </div>
+
+  <div class="teto-container" onclick="petTeto(event)">
+    <div class="speech-bubble" id="speech"></div>
+    <svg class="teto-svg" id="tetoSvg" viewBox="0 0 190 215" xmlns="http://www.w3.org/2000/svg">
+      <!-- Hair base -->
+      <ellipse cx="95" cy="100" rx="55" ry="62" fill="#e74c3c"/>
+      <!-- Face -->
+      <ellipse cx="95" cy="105" rx="42" ry="48" fill="#fde8d0"/>
+      <!-- Left drill pigtail -->
+      <g transform="translate(28, 75) rotate(-20)">
+        <ellipse cx="0" cy="0" rx="18" ry="35" fill="#c0392b"/>
+        <ellipse cx="0" cy="0" rx="15" ry="30" fill="#e74c3c"/>
+        <ellipse cx="-3" cy="-10" rx="6" ry="12" fill="rgba(255,255,255,0.15)"/>
+        <path d="M-12,-20 Q-5,-10 -12,0 Q-5,10 -12,20" stroke="#a93226" stroke-width="2" fill="none" opacity="0.5"/>
+        <path d="M8,-25 Q15,-15 8,-5 Q15,5 8,15 Q15,25 8,30" stroke="#a93226" stroke-width="2" fill="none" opacity="0.5"/>
+      </g>
+      <!-- Right drill pigtail -->
+      <g transform="translate(162, 75) rotate(20)">
+        <ellipse cx="0" cy="0" rx="18" ry="35" fill="#c0392b"/>
+        <ellipse cx="0" cy="0" rx="15" ry="30" fill="#e74c3c"/>
+        <ellipse cx="3" cy="-10" rx="6" ry="12" fill="rgba(255,255,255,0.15)"/>
+        <path d="M12,-20 Q5,-10 12,0 Q5,10 12,20" stroke="#a93226" stroke-width="2" fill="none" opacity="0.5"/>
+        <path d="M-8,-25 Q-15,-15 -8,-5 Q-15,5 -8,15 Q-15,25 -8,30" stroke="#a93226" stroke-width="2" fill="none" opacity="0.5"/>
+      </g>
+      <!-- Ahoge -->
+      <path d="M90,40 Q85,15 95,8 Q105,15 100,40" stroke="#e74c3c" stroke-width="3" fill="none"/>
+      <path d="M91,40 Q86,18 95,12 Q104,18 99,40" stroke="#c0392b" stroke-width="1.5" fill="none"/>
+      <!-- Headphones band -->
+      <path d="M40,78 Q42,50 95,45 Q148,50 150,78" stroke="var(--purple)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <!-- Left headphone -->
+      <ellipse cx="40" cy="85" rx="14" ry="18" fill="var(--purple)"/>
+      <ellipse cx="40" cy="85" rx="10" ry="14" fill="#5b21b6"/>
+      <circle cx="40" cy="85" r="4" fill="#e74c3c" opacity="0.8"/>
+      <!-- Right headphone -->
+      <ellipse cx="150" cy="85" rx="14" ry="18" fill="var(--purple)"/>
+      <ellipse cx="150" cy="85" rx="10" ry="14" fill="#5b21b6"/>
+      <circle cx="150" cy="85" r="4" fill="#e74c3c" opacity="0.8"/>
+      <!-- Eyes -->
+      <ellipse id="irisL" cx="78" cy="100" rx="7" ry="9" fill="#c0392b"/>
+      <ellipse cx="78" cy="98" rx="3" ry="4" fill="white" opacity="0.7"/>
+      <ellipse id="irisR" cx="112" cy="100" rx="7" ry="9" fill="#c0392b"/>
+      <ellipse cx="112" cy="98" rx="3" ry="4" fill="white" opacity="0.7"/>
+      <!-- Eyebrows -->
+      <path d="M68,86 Q78,82 88,86" stroke="#a93226" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M102,86 Q112,82 122,86" stroke="#a93226" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Blush -->
+      <ellipse cx="66" cy="112" rx="10" ry="6" fill="rgba(255,150,150,0.35)"/>
+      <ellipse cx="124" cy="112" rx="10" ry="6" fill="rgba(255,150,150,0.35)"/>
+      <!-- Mouth -->
+      <path id="mouth" d="M85,120 Q95,132 105,120" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Body -->
+      <path d="M65,148 Q60,155 58,175 Q58,200 75,205 L115,205 Q132,200 132,175 Q130,155 125,148" fill="#444"/>
+      <path d="M70,148 L78,200" stroke="#555" stroke-width="1" opacity="0.5"/>
+      <path d="M120,148 L112,200" stroke="#555" stroke-width="1" opacity="0.5"/>
+      <!-- Collar -->
+      <path d="M68,150 Q95,158 122,150" stroke="var(--accent)" stroke-width="2.5" fill="none"/>
+      <!-- Tie -->
+      <path d="M92,158 L88,178 L95,182 L102,178 L98,158 Z" fill="var(--accent)"/>
+      <circle cx="95" cy="160" r="3" fill="#fbbf24"/>
+      <!-- Neck -->
+      <rect x="85" y="140" width="20" height="14" rx="4" fill="#fde8d0"/>
+    </svg>
+  </div>
+
+  <div class="food-tray">
+    <button class="food-btn selected" onclick="selectFood(this)" data-emoji="🥖" data-val="35">
+      <span>🥖</span>
+      <span class="food-val">+35</span>
+    </button>
+    <button class="food-btn" onclick="selectFood(this)" data-emoji="🍞" data-val="25">
+      <span>🍞</span>
+      <span class="food-val">+25</span>
+    </button>
+    <button class="food-btn" onclick="selectFood(this)" data-emoji="🥐" data-val="20">
+      <span>🥐</span>
+      <span class="food-val">+20</span>
+    </button>
+    <button class="food-btn" onclick="selectFood(this)" data-emoji="🍙" data-val="15">
+      <span>🍙</span>
+      <span class="food-val">+15</span>
+    </button>
+  </div>
+
+  <button class="feed-btn" onclick="feedTeto()">Feed Teto! 🥖</button>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-box">
+    <h2>Teto Fainted! 💔</h2>
+    <p>She ran out of energy...</p>
+    <div class="final-score" id="finalScore">0</div>
+    <p>meals served: <span id="finalMeals">0</span></p>
+    <div class="high-score-msg" id="highScoreMsg" style="display:none">🏆 New High Score!</div>
+    <p style="font-size:0.8rem;color:var(--light-purple)">Best: <span id="bestScore">0</span></p>
+    <button class="restart-btn" onclick="restart()">Try Again!</button>
+  </div>
+</div>
+
+<script>
+// Game state
+let hunger = 100;
+let score = 0;
+let meals = 0;
+let gameOver = false;
+let drainRate = 0.45;
+let lastTime = 0;
+let selectedFood = { emoji: '🥖', val: 35 };
+
+// DOM references
+const hungerBar = document.getElementById('hungerBar');
+const hungerLabel = document.getElementById('hungerLabel');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const mealsDisplay = document.getElementById('mealsDisplay');
+const moodDisplay = document.getElementById('moodDisplay');
+const tetoSvg = document.getElementById('tetoSvg');
+const speech = document.getElementById('speech');
+const mouth = document.getElementById('mouth');
+const overlay = document.getElementById('overlay');
+const finalScore = document.getElementById('finalScore');
+const finalMeals = document.getElementById('finalMeals');
+const highScoreMsg = document.getElementById('highScoreMsg');
+const bestScoreEl = document.getElementById('bestScore');
+
+// Procedural stars
+(function createStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.setProperty('--dur', (1.5 + Math.random() * 3) + 's');
+    star.style.animationDelay = Math.random() * 3 + 's';
+    star.style.width = star.style.height = (2 + Math.random() * 3) + 'px';
+    container.appendChild(star);
+  }
+})();
+
+// High score
+let highScore = parseInt(localStorage.getItem('tetoHighScore')) || 0;
+bestScoreEl.textContent = highScore;
+
+// Speech lines
+const happyLines = [
+  "Yay, bread~! ♪",
+  "Teto is happy!",
+  "More please~!",
+  "Delicious~! ♡",
+  "Nom nom nom!",
+  "You're so kind~!",
+];
+const neutralLines = [
+  "I could eat more...",
+  "Hmm, getting hungry...",
+  "Feed me soon, okay?",
+  "Not bad, not bad.",
+];
+const angryLines = [
+  "I'm STARVING!!",
+  "Feed me NOW!",
+  "So hungry... 💢",
+  "Don't ignore me!",
+  "I'll never forgive you!",
+  "TETO DEMANDS BREAD!",
+];
+const petLinesHappy = [
+  "Eh?! D-don't touch me!",
+  "W-what are you doing?!",
+  "...it's not like I like it!",
+  "Hmph! ...okay, fine.",
+  "Teto is NOT a pet!",
+];
+const petLinesHungry = [
+  "Don't pet me, FEED ME!",
+  "Headpats won't fill my stomach!",
+  "I need BREAD not PATS!",
+];
+
+function showSpeech(text) {
+  clearTimeout(speech._t);
+  speech.textContent = text;
+  speech.classList.add('show');
+  speech._t = setTimeout(() => speech.classList.remove('show'), 2400);
+}
+
+function selectFood(btn) {
+  if (gameOver) return;
+  document.querySelectorAll('.food-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedFood = { emoji: btn.dataset.emoji, val: parseInt(btn.dataset.val) };
+}
+
+function feedTeto() {
+  if (gameOver) return;
+
+  hunger = Math.min(100, hunger + selectedFood.val);
+  score += selectedFood.val;
+  meals++;
+
+  scoreDisplay.textContent = score;
+  mealsDisplay.textContent = meals;
+
+  // Animation
+  tetoSvg.classList.remove('munch');
+  void tetoSvg.offsetWidth;
+  tetoSvg.classList.add('munch');
+
+  // Speech
+  if (hunger > 65) {
+    showSpeech(happyLines[Math.floor(Math.random() * happyLines.length)]);
+  } else if (hunger > 35) {
+    showSpeech(neutralLines[Math.floor(Math.random() * neutralLines.length)]);
+  } else {
+    showSpeech(angryLines[Math.floor(Math.random() * angryLines.length)]);
+  }
+
+  // Particles
+  const rect = tetoSvg.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height * 0.4;
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => spawnParticle(selectedFood.emoji, cx + (Math.random() - 0.5) * 60, cy + (Math.random() - 0.5) * 30), i * 100);
+  }
+
+  updateHunger();
+}
+
+function petTeto(e) {
+  if (gameOver) return;
+  e.stopPropagation();
+
+  tetoSvg.classList.remove('bop');
+  void tetoSvg.offsetWidth;
+  tetoSvg.classList.add('bop');
+
+  const rect = tetoSvg.getBoundingClientRect();
+  spawnHeart(e.clientX || (rect.left + rect.width / 2), e.clientY || (rect.top + 20));
+
+  if (hunger > 35) {
+    showSpeech(petLinesHappy[Math.floor(Math.random() * petLinesHappy.length)]);
+  } else {
+    showSpeech(petLinesHungry[Math.floor(Math.random() * petLinesHungry.length)]);
+  }
+}
+
+function updateHunger() {
+  hunger = Math.max(0, Math.min(100, hunger));
+  hungerBar.style.width = hunger + '%';
+  hungerLabel.textContent = 'Hunger: ' + Math.round(hunger) + '%';
+
+  if (hunger > 65) {
+    moodDisplay.textContent = '😊';
+    mouth.setAttribute('d', 'M85,120 Q95,132 105,120');
+    hungerBar.style.background = 'linear-gradient(90deg, #ff6b6b, var(--accent))';
+  } else if (hunger > 35) {
+    moodDisplay.textContent = '😐';
+    mouth.setAttribute('d', 'M85,122 L105,122');
+    hungerBar.style.background = 'linear-gradient(90deg, #f59e0b, #ea580c)';
+  } else if (hunger > 10) {
+    moodDisplay.textContent = '😠';
+    mouth.setAttribute('d', 'M85,126 Q95,118 105,126');
+    hungerBar.style.background = 'linear-gradient(90deg, #dc2626, #991b1b)';
+  } else if (hunger > 0) {
+    moodDisplay.textContent = '💀';
+    hungerBar.style.background = '#7f1d1d';
+  }
+
+  if (hunger <= 0) {
+    endGame();
+  }
+}
+
+function endGame() {
+  gameOver = true;
+  finalScore.textContent = score;
+  finalMeals.textContent = meals;
+
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem('tetoHighScore', highScore);
+    highScoreMsg.style.display = 'block';
+  } else {
+    highScoreMsg.style.display = 'none';
+  }
+  bestScoreEl.textContent = highScore;
+
+  overlay.classList.add('show');
+}
+
+function restart() {
+  hunger = 100;
+  score = 0;
+  meals = 0;
+  gameOver = false;
+  drainRate = 0.45;
+  lastTime = 0;
+
+  scoreDisplay.textContent = '0';
+  mealsDisplay.textContent = '0';
+  moodDisplay.textContent = '😊';
+  mouth.setAttribute('d', 'M85,120 Q95,132 105,120');
+
+  overlay.classList.remove('show');
+  updateHunger();
+  requestAnimationFrame(gameLoop);
+}
+
+function gameLoop(ts) {
+  if (gameOver) return;
+
+  if (lastTime === 0) {
+    lastTime = ts;
+    requestAnimationFrame(gameLoop);
+    return;
+  }
+
+  const dt = (ts - lastTime) / 1000;
+  lastTime = ts;
+
+  drainRate = 0.45 + score * 0.0008;
+  hunger -= drainRate * dt * 10;
+
+  updateHunger();
+
+  if (!gameOver) {
+    requestAnimationFrame(gameLoop);
+  }
+}
+
+function spawnParticle(emoji, x, y) {
+  const el = document.createElement('div');
+  el.className = 'particle';
+  el.textContent = emoji;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+function spawnHeart(x, y) {
+  const el = document.createElement('div');
+  el.className = 'heart-particle';
+  el.textContent = '❤️';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// Random angry speech when hungry
+setInterval(() => {
+  if (!gameOver && hunger <= 35 && hunger > 0) {
+    showSpeech(angryLines[Math.floor(Math.random() * angryLines.length)]);
+  }
+}, 4000);
+
+// Start
+updateHunger();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
