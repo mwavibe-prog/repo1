@@ -97,25 +97,33 @@ h1 {
   font-size: 1.3rem;
 }
 
-.hunger-bar-wrap {
+.bars { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+.bar-wrap {
   background: rgba(0,0,0,0.4);
   border-radius: 12px;
   height: 28px;
-  margin-bottom: 16px;
   overflow: hidden;
   border: 2px solid rgba(167, 139, 250, 0.3);
   position: relative;
 }
 
-.hunger-bar {
+.hunger-bar, .thirst-bar {
   height: 100%;
   width: 100%;
   border-radius: 10px;
-  background: linear-gradient(90deg, #ff6b6b, var(--accent));
   transition: width 0.3s ease, background 0.5s;
 }
 
-.hunger-label {
+.hunger-bar {
+  background: linear-gradient(90deg, #ff6b6b, var(--accent));
+}
+
+.thirst-bar {
+  background: linear-gradient(90deg, #38bdf8, #2563eb);
+}
+
+.bar-label {
   position: absolute;
   inset: 0;
   display: flex;
@@ -211,6 +219,22 @@ h1 {
   border-color: var(--accent);
   background: rgba(192, 57, 43, 0.25);
   box-shadow: 0 0 12px rgba(192, 57, 43, 0.3);
+}
+
+.drink-btn.selected {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.3);
+}
+
+.drink-action-btn {
+  background: linear-gradient(135deg, #2563eb, #38bdf8) !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4) !important;
+  margin-top: 8px !important;
+}
+
+.drink-action-btn:hover {
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
 }
 
 .food-btn .food-val {
@@ -368,9 +392,15 @@ h1 {
     </div>
   </div>
 
-  <div class="hunger-bar-wrap">
-    <div class="hunger-bar" id="hungerBar"></div>
-    <div class="hunger-label" id="hungerLabel">Hunger: 100%</div>
+  <div class="bars">
+    <div class="bar-wrap">
+      <div class="hunger-bar" id="hungerBar"></div>
+      <div class="bar-label" id="hungerLabel">Hunger: 100%</div>
+    </div>
+    <div class="bar-wrap">
+      <div class="thirst-bar" id="thirstBar"></div>
+      <div class="bar-label" id="thirstLabel">Thirst: 100%</div>
+    </div>
   </div>
 
   <div class="teto-container" onclick="petTeto(event)">
@@ -456,6 +486,27 @@ h1 {
   </div>
 
   <button class="feed-btn" onclick="feedTeto()">Feed Teto! 🥖</button>
+
+  <div class="food-tray" id="drinkTray">
+    <button class="food-btn drink-btn selected" onclick="selectDrink(this)" data-emoji="🥛" data-val="30">
+      <span>🥛</span>
+      <span class="food-val">+30</span>
+    </button>
+    <button class="food-btn drink-btn" onclick="selectDrink(this)" data-emoji="🍵" data-val="25">
+      <span>🍵</span>
+      <span class="food-val">+25</span>
+    </button>
+    <button class="food-btn drink-btn" onclick="selectDrink(this)" data-emoji="🧃" data-val="20">
+      <span>🧃</span>
+      <span class="food-val">+20</span>
+    </button>
+    <button class="food-btn drink-btn" onclick="selectDrink(this)" data-emoji="💧" data-val="15">
+      <span>💧</span>
+      <span class="food-val">+15</span>
+    </button>
+  </div>
+
+  <button class="feed-btn drink-action-btn" onclick="giveDrink()">Give Drink! 🥛</button>
 </div>
 
 <div class="overlay" id="overlay">
@@ -473,16 +524,21 @@ h1 {
 <script>
 // Game state
 let hunger = 100;
+let thirst = 100;
 let score = 0;
 let meals = 0;
 let gameOver = false;
 let drainRate = 0.45;
+let thirstDrainRate = 0.3;
 let lastTime = 0;
 let selectedFood = { emoji: '🥖', val: 35 };
+let selectedDrink = { emoji: '🥛', val: 30 };
 
 // DOM references
 const hungerBar = document.getElementById('hungerBar');
 const hungerLabel = document.getElementById('hungerLabel');
+const thirstBar = document.getElementById('thirstBar');
+const thirstLabel = document.getElementById('thirstLabel');
 const scoreDisplay = document.getElementById('scoreDisplay');
 const mealsDisplay = document.getElementById('mealsDisplay');
 const moodDisplay = document.getElementById('moodDisplay');
@@ -549,6 +605,21 @@ const petLinesHungry = [
   "Headpats won't fill my stomach!",
   "I need BREAD not PATS!",
 ];
+const thirstyLines = [
+  "I'm so thirsty~!",
+  "Need a drink...",
+  "My throat is dry! 💧",
+  "Water... please...",
+  "GIVE ME SOMETHING TO DRINK!",
+  "Teto needs a beverage!",
+];
+const drinkHappyLines = [
+  "Ahh, refreshing~! ♪",
+  "So good! 💧",
+  "Gulp gulp~!",
+  "That hit the spot!",
+  "Hydration is important!",
+];
 
 function showSpeech(text) {
   clearTimeout(speech._t);
@@ -562,6 +633,44 @@ function selectFood(btn) {
   document.querySelectorAll('.food-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedFood = { emoji: btn.dataset.emoji, val: parseInt(btn.dataset.val) };
+}
+
+function selectDrink(btn) {
+  if (gameOver) return;
+  document.querySelectorAll('.drink-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedDrink = { emoji: btn.dataset.emoji, val: parseInt(btn.dataset.val) };
+}
+
+function giveDrink() {
+  if (gameOver) return;
+
+  thirst = Math.min(100, thirst + selectedDrink.val);
+  score += selectedDrink.val;
+  meals++;
+
+  scoreDisplay.textContent = score;
+  mealsDisplay.textContent = meals;
+
+  tetoSvg.classList.remove('munch');
+  void tetoSvg.offsetWidth;
+  tetoSvg.classList.add('munch');
+
+  if (thirst > 50) {
+    showSpeech(drinkHappyLines[Math.floor(Math.random() * drinkHappyLines.length)]);
+  } else {
+    showSpeech(thirstyLines[Math.floor(Math.random() * thirstyLines.length)]);
+  }
+
+  const rect = tetoSvg.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height * 0.4;
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => spawnParticle(selectedDrink.emoji, cx + (Math.random() - 0.5) * 60, cy + (Math.random() - 0.5) * 30), i * 100);
+  }
+
+  updateThirst();
+  updateHunger();
 }
 
 function feedTeto() {
@@ -622,24 +731,49 @@ function updateHunger() {
   hungerBar.style.width = hunger + '%';
   hungerLabel.textContent = 'Hunger: ' + Math.round(hunger) + '%';
 
-  if (hunger > 65) {
+  const lowestNeed = Math.min(hunger, thirst);
+  if (lowestNeed > 65) {
     moodDisplay.textContent = '😊';
     mouth.setAttribute('d', 'M85,120 Q95,132 105,120');
-    hungerBar.style.background = 'linear-gradient(90deg, #ff6b6b, var(--accent))';
-  } else if (hunger > 35) {
+  } else if (lowestNeed > 35) {
     moodDisplay.textContent = '😐';
     mouth.setAttribute('d', 'M85,122 L105,122');
-    hungerBar.style.background = 'linear-gradient(90deg, #f59e0b, #ea580c)';
-  } else if (hunger > 10) {
+  } else if (lowestNeed > 10) {
     moodDisplay.textContent = '😠';
     mouth.setAttribute('d', 'M85,126 Q95,118 105,126');
+  } else if (lowestNeed > 0) {
+    moodDisplay.textContent = '💀';
+  }
+
+  if (hunger > 65) {
+    hungerBar.style.background = 'linear-gradient(90deg, #ff6b6b, var(--accent))';
+  } else if (hunger > 35) {
+    hungerBar.style.background = 'linear-gradient(90deg, #f59e0b, #ea580c)';
+  } else if (hunger > 10) {
     hungerBar.style.background = 'linear-gradient(90deg, #dc2626, #991b1b)';
   } else if (hunger > 0) {
-    moodDisplay.textContent = '💀';
     hungerBar.style.background = '#7f1d1d';
   }
 
   if (hunger <= 0) {
+    endGame();
+  }
+}
+
+function updateThirst() {
+  thirst = Math.max(0, Math.min(100, thirst));
+  thirstBar.style.width = thirst + '%';
+  thirstLabel.textContent = 'Thirst: ' + Math.round(thirst) + '%';
+
+  if (thirst > 60) {
+    thirstBar.style.background = 'linear-gradient(90deg, #38bdf8, #2563eb)';
+  } else if (thirst > 30) {
+    thirstBar.style.background = 'linear-gradient(90deg, #f59e0b, #ea580c)';
+  } else {
+    thirstBar.style.background = 'linear-gradient(90deg, #dc2626, #991b1b)';
+  }
+
+  if (thirst <= 0) {
     endGame();
   }
 }
@@ -663,10 +797,12 @@ function endGame() {
 
 function restart() {
   hunger = 100;
+  thirst = 100;
   score = 0;
   meals = 0;
   gameOver = false;
   drainRate = 0.45;
+  thirstDrainRate = 0.3;
   lastTime = 0;
 
   scoreDisplay.textContent = '0';
@@ -676,6 +812,7 @@ function restart() {
 
   overlay.classList.remove('show');
   updateHunger();
+  updateThirst();
   requestAnimationFrame(gameLoop);
 }
 
@@ -694,7 +831,11 @@ function gameLoop(ts) {
   drainRate = 0.45 + score * 0.0008;
   hunger -= drainRate * dt * 10;
 
+  thirstDrainRate = 0.3 + score * 0.0005;
+  thirst -= thirstDrainRate * dt * 10;
+
   updateHunger();
+  updateThirst();
 
   if (!gameOver) {
     requestAnimationFrame(gameLoop);
@@ -721,15 +862,19 @@ function spawnHeart(x, y) {
   setTimeout(() => el.remove(), 1000);
 }
 
-// Random angry speech when hungry
+// Random speech when hungry or thirsty
 setInterval(() => {
-  if (!gameOver && hunger <= 35 && hunger > 0) {
+  if (gameOver) return;
+  if (thirst <= 35 && thirst > 0 && (hunger > 35 || Math.random() < 0.5)) {
+    showSpeech(thirstyLines[Math.floor(Math.random() * thirstyLines.length)]);
+  } else if (hunger <= 35 && hunger > 0) {
     showSpeech(angryLines[Math.floor(Math.random() * angryLines.length)]);
   }
 }, 4000);
 
 // Start
 updateHunger();
+updateThirst();
 requestAnimationFrame(gameLoop);
 </script>
 </body>
